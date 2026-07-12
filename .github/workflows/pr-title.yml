@@ -1,0 +1,19 @@
+name: PR title
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  lint:
+    name: Conventional Commits title
+    runs-on: ubuntu-latest
+    steps:
+      # PRs are squash-merged, so the PR title becomes the commit on main
+      # and must follow Conventional Commits (see AGENTS.md).
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
