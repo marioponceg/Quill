@@ -30,7 +30,9 @@ with integrations in separate modules, coroutine-friendly, published under
 ## Non-goals (v0.1 — recorded as future work)
 
 - Maven Central publishing (added after v0.1 works end to end).
-- detekt / Kover / apiCheck in CI (added later to reach parity with Conduit's pipeline).
+- detekt / apiCheck in CI (added later to reach parity with Conduit's pipeline).
+  Kover + Codecov ARE in scope for v0.1 (decided 2026-07-13): coverage reports upload
+  from CI; the 90% minimum bound arrives with the first real code in PR #2.
 - File/JSON sink, remote sinks.
 - Coroutine-propagated ambient context (scoped fields attached to all logs in a scope).
 - Kotlin Multiplatform (Android + JVM only for now).
