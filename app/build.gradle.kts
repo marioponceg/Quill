@@ -5,15 +5,13 @@ plugins {
 android {
     namespace = "io.github.marioponceg.quill"
     compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
+        version = release(37)
     }
 
     defaultConfig {
         applicationId = "io.github.marioponceg.quill"
-        minSdk = 21
-        targetSdk = 36
+        minSdk = 26
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
