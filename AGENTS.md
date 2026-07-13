@@ -55,4 +55,5 @@ implementing.
 - Dependency versions live only in `gradle/libs.versions.toml`.
 - Coverage via Kover, uploaded to Codecov from CI. A 90% `minBound` lands in PR #2.
 - No instrumented/emulator tests in v0.1.
-- Superpowers specs/plans ride as `docs:` commits inside feature PRs, never their own PR.
+- Superpowers specs/plans live in `docs/superpowers/` locally but are gitignored — never
+  committed nor PR'd. The relevant AGENTS.md sections are their durable record.
