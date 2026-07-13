@@ -97,4 +97,34 @@ class JsonPrettyPrinterTest {
         assertNull(JsonPrettyPrinter.prettyPrintOrNull("""{"a":1} trailing"""))
         assertNull(JsonPrettyPrinter.prettyPrintOrNull("""{a:1}"""))           // unquoted key
     }
+
+    @Test
+    fun `returns null for non JSON number literals`() {
+        assertNull(JsonPrettyPrinter.prettyPrintOrNull("""{"a":NaN}"""))
+        assertNull(JsonPrettyPrinter.prettyPrintOrNull("""{"a":Infinity}"""))
+        assertNull(JsonPrettyPrinter.prettyPrintOrNull("""{"a":+1}"""))
+        assertNull(JsonPrettyPrinter.prettyPrintOrNull("""{"a":1.}"""))
+        assertNull(JsonPrettyPrinter.prettyPrintOrNull("""{"a":01}"""))
+    }
+
+    @Test
+    fun `pretty prints valid JSON number literals`() {
+        assertEquals(
+            """
+            [
+                0,
+                -1,
+                1.5,
+                1e-3,
+                2E+8
+            ]
+            """.trimIndent(),
+            JsonPrettyPrinter.prettyPrintOrNull("[0,-1,1.5,1e-3,2E+8]"),
+        )
+    }
+
+    @Test
+    fun `returns null for deeply nested input instead of crashing`() {
+        assertNull(JsonPrettyPrinter.prettyPrintOrNull("[".repeat(100_000) + "]".repeat(100_000)))
+    }
 }

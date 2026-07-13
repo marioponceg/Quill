@@ -9,6 +9,8 @@ package io.github.marioponceg.quill
 internal object JsonPrettyPrinter {
 
     private const val INDENT = "    "
+    private const val MAX_DEPTH = 200
+    private val NUMBER_REGEX = Regex("""-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?""")
 
     fun prettyPrintOrNull(raw: String): String? {
         val trimmed = raw.trim()
@@ -36,6 +38,7 @@ internal object JsonPrettyPrinter {
         }
 
         fun appendValue(out: StringBuilder, depth: Int) {
+            if (depth > MAX_DEPTH) throw MalformedJson()
             skipWhitespace()
             when (peek()) {
                 '{' -> appendObject(out, depth)
@@ -135,7 +138,7 @@ internal object JsonPrettyPrinter {
             while (!atEnd && source[index] !in ",]}" && !source[index].isWhitespace()) index++
             val literal = source.substring(start, index)
             val valid = literal == "true" || literal == "false" || literal == "null" ||
-                literal.toDoubleOrNull() != null
+                NUMBER_REGEX.matches(literal)
             if (!valid) throw MalformedJson()
             return literal
         }
