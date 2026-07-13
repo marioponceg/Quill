@@ -127,4 +127,37 @@ class JsonPrettyPrinterTest {
     fun `returns null for deeply nested input instead of crashing`() {
         assertNull(JsonPrettyPrinter.prettyPrintOrNull("[".repeat(100_000) + "]".repeat(100_000)))
     }
+
+    @Test
+    fun `isValidJson agrees with prettyPrintOrNull for every covered input`() {
+        val inputs = listOf(
+            """{"id":42,"name":"Mario","admin":true}""",
+            """{"user":{"id":42,"roles":["admin","editor"]},"active":null}""",
+            """{"a":{},"b":[]}""",
+            """{"msg":"say \"hi\", ok"}""",
+            "[1,2.5,false]",
+            "plain sentence",
+            "",
+            "42",
+            """{"a":1""",
+            """{"a" 1}""",
+            """{"a":oops}""",
+            """{"a":1} trailing""",
+            """{a:1}""",
+            """{"a":NaN}""",
+            """{"a":Infinity}""",
+            """{"a":+1}""",
+            """{"a":1.}""",
+            """{"a":01}""",
+            "[0,-1,1.5,1e-3,2E+8]",
+            "[".repeat(100_000) + "]".repeat(100_000),
+        )
+        for (input in inputs) {
+            assertEquals(
+                JsonPrettyPrinter.prettyPrintOrNull(input) != null,
+                JsonPrettyPrinter.isValidJson(input),
+                "mismatch for input: $input",
+            )
+        }
+    }
 }

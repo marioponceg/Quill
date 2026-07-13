@@ -13,16 +13,28 @@ internal object JsonPrettyPrinter {
     private val NUMBER_REGEX = Regex("""-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?""")
 
     fun prettyPrintOrNull(raw: String): String? {
+        val out = StringBuilder()
+        return if (parse(raw, out)) out.toString() else null
+    }
+
+    /**
+     * Validates that [raw] is a single, complete, well-formed JSON object or array,
+     * without building the pretty-printed output. Shares the [Parser] traversal with
+     * [prettyPrintOrNull] so the two never diverge on what counts as valid JSON.
+     */
+    internal fun isValidJson(raw: String): Boolean = parse(raw, out = null)
+
+    /** Runs the shared grammar traversal, appending to [out] only when it is non-null. */
+    private fun parse(raw: String, out: StringBuilder?): Boolean {
         val trimmed = raw.trim()
-        if (trimmed.isEmpty() || (trimmed.first() != '{' && trimmed.first() != '[')) return null
+        if (trimmed.isEmpty() || (trimmed.first() != '{' && trimmed.first() != '[')) return false
         val parser = Parser(trimmed)
         return try {
-            val out = StringBuilder()
             parser.appendValue(out, depth = 0)
             parser.skipWhitespace()
-            if (parser.atEnd) out.toString() else null
+            parser.atEnd
         } catch (_: MalformedJson) {
-            null
+            false
         }
     }
 
@@ -37,45 +49,52 @@ internal object JsonPrettyPrinter {
             while (!atEnd && source[index].isWhitespace()) index++
         }
 
-        fun appendValue(out: StringBuilder, depth: Int) {
+        fun appendValue(out: StringBuilder?, depth: Int) {
             if (depth > MAX_DEPTH) throw MalformedJson()
             skipWhitespace()
             when (peek()) {
                 '{' -> appendObject(out, depth)
                 '[' -> appendArray(out, depth)
-                '"' -> out.append(readString())
-                else -> out.append(readLiteral())
+                '"' -> {
+                    val string = readString()
+                    out?.append(string)
+                }
+                else -> {
+                    val literal = readLiteral()
+                    out?.append(literal)
+                }
             }
         }
 
-        private fun appendObject(out: StringBuilder, depth: Int) {
+        private fun appendObject(out: StringBuilder?, depth: Int) {
             expect('{')
             skipWhitespace()
             if (peek() == '}') {
                 index++
-                out.append("{}")
+                out?.append("{}")
                 return
             }
-            out.append("{\n")
+            out?.append("{\n")
             while (true) {
                 skipWhitespace()
                 indent(out, depth + 1)
-                out.append(readString())
+                val key = readString()
+                out?.append(key)
                 skipWhitespace()
                 expect(':')
-                out.append(": ")
+                out?.append(": ")
                 appendValue(out, depth + 1)
                 skipWhitespace()
                 when (peek()) {
                     ',' -> {
                         index++
-                        out.append(",\n")
+                        out?.append(",\n")
                     }
                     '}' -> {
                         index++
-                        out.append('\n')
+                        out?.append('\n')
                         indent(out, depth)
-                        out.append('}')
+                        out?.append('}')
                         return
                     }
                     else -> throw MalformedJson()
@@ -83,15 +102,15 @@ internal object JsonPrettyPrinter {
             }
         }
 
-        private fun appendArray(out: StringBuilder, depth: Int) {
+        private fun appendArray(out: StringBuilder?, depth: Int) {
             expect('[')
             skipWhitespace()
             if (peek() == ']') {
                 index++
-                out.append("[]")
+                out?.append("[]")
                 return
             }
-            out.append("[\n")
+            out?.append("[\n")
             while (true) {
                 skipWhitespace()
                 indent(out, depth + 1)
@@ -100,13 +119,13 @@ internal object JsonPrettyPrinter {
                 when (peek()) {
                     ',' -> {
                         index++
-                        out.append(",\n")
+                        out?.append(",\n")
                     }
                     ']' -> {
                         index++
-                        out.append('\n')
+                        out?.append('\n')
                         indent(out, depth)
-                        out.append(']')
+                        out?.append(']')
                         return
                     }
                     else -> throw MalformedJson()
@@ -153,7 +172,8 @@ internal object JsonPrettyPrinter {
             index++
         }
 
-        private fun indent(out: StringBuilder, depth: Int) {
+        private fun indent(out: StringBuilder?, depth: Int) {
+            if (out == null) return
             repeat(depth) { out.append(INDENT) }
         }
     }

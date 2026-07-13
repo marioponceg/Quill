@@ -24,7 +24,7 @@ public class QuillFieldBuilder internal constructor() {
         is Char -> QuillValue.Text(value.toString())
         is CharSequence -> {
             val text = value.toString()
-            if (JsonPrettyPrinter.prettyPrintOrNull(text) != null) {
+            if (JsonPrettyPrinter.isValidJson(text)) {
                 QuillValue.Structured(text)
             } else {
                 QuillValue.Text(text)
