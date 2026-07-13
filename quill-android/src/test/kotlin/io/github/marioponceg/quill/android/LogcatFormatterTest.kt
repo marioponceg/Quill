@@ -106,4 +106,56 @@ class LogcatFormatterTest {
             lines,
         )
     }
+
+    @Test
+    fun `throwable renders header and indented stack inside the box`() {
+        val boom = java.io.IOException("timeout after 30s").apply {
+            stackTrace = arrayOf(
+                StackTraceElement("SyncWorker", "sync", "SyncWorker.kt", 87),
+                StackTraceElement("SyncWorker", "run", "SyncWorker.kt", 12),
+            )
+        }
+        val lines = LogcatFormatter().format(
+            event(
+                name = "sync_failed",
+                fields = linkedMapOf("retries" to QuillValue.Number(3)),
+                throwable = boom,
+            ),
+        )
+        assertEquals(
+            listOf(
+                "┌─ sync_failed " + "─".repeat(45),
+                "│ retries: 3",
+                "│ ▼ IOException: timeout after 30s",
+                "│     at SyncWorker.sync(SyncWorker.kt:87)",
+                "│     at SyncWorker.run(SyncWorker.kt:12)",
+                "└" + "─".repeat(59),
+            ),
+            lines,
+        )
+    }
+
+    @Test
+    fun `throwable without message renders only the class name`() {
+        val boom = IllegalStateException().apply { stackTrace = emptyArray() }
+        val lines = LogcatFormatter().format(event(throwable = boom))
+        assertEquals("│ ▼ IllegalStateException", lines[1])
+    }
+
+    @Test
+    fun `caused-by chains are preserved with the same indent`() {
+        val cause = java.io.IOException("socket closed").apply { stackTrace = emptyArray() }
+        val boom = RuntimeException("sync failed", cause).apply {
+            stackTrace = arrayOf(StackTraceElement("SyncWorker", "sync", "SyncWorker.kt", 87))
+        }
+        val lines = LogcatFormatter().format(event(throwable = boom))
+        assertEquals(
+            listOf(
+                "│ ▼ RuntimeException: sync failed",
+                "│     at SyncWorker.sync(SyncWorker.kt:87)",
+                "│     Caused by: java.io.IOException: socket closed",
+            ),
+            lines.subList(1, 4),
+        )
+    }
 }

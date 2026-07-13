@@ -25,6 +25,7 @@ public class LogcatFormatter(
             add("│ $key: ${valueLines.first()}")
             for (line in valueLines.drop(1)) add("│ $line")
         }
+        event.throwable?.let { addAll(throwableLines(it)) }
         add("└" + "─".repeat(BOX_WIDTH - 1))
     }
 
@@ -36,6 +37,20 @@ public class LogcatFormatter(
         is QuillValue.Bool -> value.value.toString()
         is QuillValue.Structured -> QuillBeautifier.beautify(value.raw)
         QuillValue.Null -> "null"
+    }
+
+    private fun throwableLines(throwable: Throwable): List<String> = buildList {
+        add("│ ▼ ${throwableHeader(throwable)}")
+        for (line in throwable.stackTraceToString().lines().drop(1)) {
+            if (line.isBlank()) continue
+            add("│     ${line.trim()}")
+        }
+    }
+
+    private fun throwableHeader(throwable: Throwable): String {
+        val name = throwable::class.simpleName ?: "Throwable"
+        val message = throwable.message
+        return if (message == null) name else "$name: $message"
     }
 
     private companion object {
