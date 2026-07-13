@@ -52,4 +52,18 @@ class LogcatChunkerTest {
     fun `default limit is logcat's 4000`() {
         assertEquals(4000, LogcatChunker.MAX_MESSAGE_LENGTH)
     }
+
+    @Test
+    fun `degrades to an empty prefix when the prefix itself would overflow the limit`() {
+        val chunks = LogcatChunker.chunk(
+            listOf("x".repeat(30)),
+            continuationPrefix = "─".repeat(25),
+            maxLength = 10,
+        )
+        assertTrue(chunks.all { it.length <= 10 })
+        assertEquals(
+            "x".repeat(30),
+            chunks.joinToString("") { it.replace("─", "") },
+        )
+    }
 }
