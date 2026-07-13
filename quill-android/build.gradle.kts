@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
+    alias(libs.plugins.kover)
 }
 
 android {
@@ -29,4 +30,14 @@ android {
 dependencies {
     api(project(":quill-core"))
     testImplementation(libs.kotlin.test.junit5)
+}
+
+kover {
+    reports {
+        verify {
+            rule("Minimum line coverage") {
+                minBound(90)
+            }
+        }
+    }
 }
