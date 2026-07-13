@@ -76,4 +76,10 @@ class DataClassPrettyPrinterTest {
         val deeplyNested = "A(".repeat(100_000) + ")".repeat(100_000)
         assertNull(DataClassPrettyPrinter.prettyPrintOrNull(deeplyNested))
     }
+
+    @Test
+    fun `returns null for deep keyed nesting instead of overflowing the stack`() {
+        val deeplyNested = "A(k=".repeat(100_000) + ")".repeat(100_000)
+        assertNull(DataClassPrettyPrinter.prettyPrintOrNull(deeplyNested))
+    }
 }

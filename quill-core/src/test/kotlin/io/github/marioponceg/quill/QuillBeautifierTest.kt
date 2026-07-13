@@ -42,4 +42,10 @@ class QuillBeautifierTest {
         val deeplyNested = "A(".repeat(100_000) + ")".repeat(100_000)
         assertEquals(deeplyNested, QuillBeautifier.beautify(deeplyNested))
     }
+
+    @Test
+    fun `returns deep keyed nesting raw instead of throwing`() {
+        val deeplyNested = "A(k=".repeat(100_000) + ")".repeat(100_000)
+        assertEquals(deeplyNested, QuillBeautifier.beautify(deeplyNested))
+    }
 }
