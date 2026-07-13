@@ -16,8 +16,17 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
+    testOptions {
+        unitTests.all { it.useJUnitPlatform() }
+    }
+
+    kotlin {
+        explicitApi()
+    }
 }
 
 dependencies {
     api(project(":quill-core"))
+    testImplementation(libs.kotlin.test.junit5)
 }
