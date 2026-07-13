@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
+    alias(libs.plugins.kover)
 }
 
 android {
@@ -16,8 +17,27 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
+    testOptions {
+        unitTests.all { it.useJUnitPlatform() }
+    }
+
+    kotlin {
+        explicitApi()
+    }
 }
 
 dependencies {
     api(project(":quill-core"))
+    testImplementation(libs.kotlin.test.junit5)
+}
+
+kover {
+    reports {
+        verify {
+            rule("Minimum line coverage") {
+                minBound(90)
+            }
+        }
+    }
 }
