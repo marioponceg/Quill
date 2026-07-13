@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("build-logic")
     repositories {
         google {
             content {
@@ -23,5 +24,7 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Quill"
-include(":app")
+include(":quill-core")
+include(":quill-android")
+include(":demo")
  

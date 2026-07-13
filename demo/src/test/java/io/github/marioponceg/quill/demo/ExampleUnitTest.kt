@@ -1,4 +1,4 @@
-package io.github.marioponceg.quill
+package io.github.marioponceg.quill.demo
 
 import org.junit.Test
 

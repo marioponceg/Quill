@@ -37,3 +37,7 @@ google-services.json
 *.env
 .env.local
 secrets.properties
+
+# Superpowers working docs (specs/plans) stay local, never committed
+docs/superpowers/
+.superpowers/
