@@ -29,7 +29,23 @@ public class LogcatFormatter(
         add("└" + "─".repeat(BOX_WIDTH - 1))
     }
 
-    private fun formatFlat(event: QuillEvent): String = event.name
+    private fun formatFlat(event: QuillEvent): String = buildString {
+        append(event.name)
+        if (event.fields.isNotEmpty()) {
+            append("  ")
+            append(
+                event.fields.entries.joinToString(" ") { (key, value) ->
+                    "$key=${renderFlat(value)}"
+                },
+            )
+        }
+        event.throwable?.let { append("  ▼ ${throwableHeader(it)}") }
+    }
+
+    private fun renderFlat(value: QuillValue): String = when (value) {
+        is QuillValue.Structured -> value.raw
+        else -> renderBoxed(value)
+    }
 
     private fun renderBoxed(value: QuillValue): String = when (value) {
         is QuillValue.Text -> "\"${value.value}\""

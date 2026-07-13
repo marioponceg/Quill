@@ -158,4 +158,35 @@ class LogcatFormatterTest {
             lines.subList(1, 4),
         )
     }
+
+    @Test
+    fun `flat mode renders a single line with key=value pairs`() {
+        val lines = LogcatFormatter(boxed = false).format(
+            event(
+                fields = linkedMapOf(
+                    "userId" to QuillValue.Number(42),
+                    "method" to QuillValue.Text("oauth"),
+                ),
+            ),
+        )
+        assertEquals(listOf("user_login  userId=42 method=\"oauth\""), lines)
+    }
+
+    @Test
+    fun `flat mode keeps structured values raw and appends the throwable header`() {
+        val boom = java.io.IOException("timeout").apply { stackTrace = emptyArray() }
+        val lines = LogcatFormatter(boxed = false).format(
+            event(
+                name = "sync_failed",
+                fields = linkedMapOf("payload" to QuillValue.Structured("""{"a":1}""")),
+                throwable = boom,
+            ),
+        )
+        assertEquals(listOf("""sync_failed  payload={"a":1}  ▼ IOException: timeout"""), lines)
+    }
+
+    @Test
+    fun `flat mode with no fields is just the event name`() {
+        assertEquals(listOf("app_start"), LogcatFormatter(boxed = false).format(event(name = "app_start")))
+    }
 }
