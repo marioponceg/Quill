@@ -31,6 +31,24 @@ class QuillFieldBuilderTest {
     }
 
     @Test
+    fun `Char becomes Text`() {
+        val fields = fieldsOf { "initial" to 'x' }
+        assertEquals(QuillValue.Text("x"), fields["initial"])
+    }
+
+    @Test
+    fun `non-String CharSequence becomes Text via toString`() {
+        val fields = fieldsOf { "greeting" to StringBuilder("hello") }
+        assertEquals(QuillValue.Text("hello"), fields["greeting"])
+    }
+
+    @Test
+    fun `non-String CharSequence that parses as JSON becomes Structured`() {
+        val fields = fieldsOf { "payload" to StringBuilder("""{"a":1}""") }
+        assertEquals(QuillValue.Structured("""{"a":1}"""), fields["payload"])
+    }
+
+    @Test
     fun `arbitrary objects become Structured via toString`() {
         data class Point(val x: Int, val y: Int)
         val fields = fieldsOf { "point" to Point(1, 2) }
