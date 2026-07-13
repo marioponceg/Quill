@@ -25,7 +25,7 @@ public class QuillLogger internal constructor(
         origin: String,
         sinks: List<QuillSink>,
         minLevel: QuillLevel = QuillLevel.Verbose,
-    ) : this(origin, { QuillConfig(minLevel, sinks) })
+    ) : this(origin, QuillConfig(minLevel, sinks).let { fixed -> fun(): QuillConfig = fixed })
 
     public fun verbose(
         name: String,
@@ -87,7 +87,10 @@ public class QuillLogger internal constructor(
             try {
                 sink.write(event)
             } catch (_: Throwable) {
-                // A sink must never take down the host app or the other sinks.
+                // Deliberately broad: a sink must never take down the host app or the
+                // other sinks, even via Errors (AssertionError, StackOverflowError).
+                // Assertions inside a sink's write() will be swallowed — use FakeSink
+                // and assert on its captured events instead.
             }
         }
     }
