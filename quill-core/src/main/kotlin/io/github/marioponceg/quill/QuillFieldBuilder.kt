@@ -15,7 +15,7 @@ public class QuillFieldBuilder internal constructor() {
         fields[this] = convert(value)
     }
 
-    internal fun build(): Map<String, QuillValue> = fields
+    internal fun build(): Map<String, QuillValue> = fields.toMap()
 
     private fun convert(value: Any?): QuillValue = when (value) {
         null -> QuillValue.Null

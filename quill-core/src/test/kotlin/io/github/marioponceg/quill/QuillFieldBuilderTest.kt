@@ -65,4 +65,13 @@ class QuillFieldBuilderTest {
         assertEquals(listOf("a", "b"), fields.keys.toList())
         assertEquals(QuillValue.Number(3), fields["a"])
     }
+
+    @Test
+    fun `build returns a snapshot unaffected by further mutation`() {
+        val builder = QuillFieldBuilder()
+        with(builder) { "a" to 1 }
+        val built = builder.build()
+        with(builder) { "b" to 2 }
+        assertEquals(mapOf("a" to QuillValue.Number(1)), built)
+    }
 }
