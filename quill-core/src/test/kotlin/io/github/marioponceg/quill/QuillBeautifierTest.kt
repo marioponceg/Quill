@@ -36,4 +36,10 @@ class QuillBeautifierTest {
         assertEquals("{broken json", QuillBeautifier.beautify("{broken json"))
         assertEquals("", QuillBeautifier.beautify(""))
     }
+
+    @Test
+    fun `returns absurdly deep data class input raw instead of throwing`() {
+        val deeplyNested = "A(".repeat(100_000) + ")".repeat(100_000)
+        assertEquals(deeplyNested, QuillBeautifier.beautify(deeplyNested))
+    }
 }

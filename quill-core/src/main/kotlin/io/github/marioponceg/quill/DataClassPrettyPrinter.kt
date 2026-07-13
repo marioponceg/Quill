@@ -10,12 +10,30 @@ package io.github.marioponceg.quill
 internal object DataClassPrettyPrinter {
 
     private const val INDENT = "    "
+    private const val MAX_DEPTH = 200
     private val CLASS_NAME = Regex("""^[A-Za-z_$][A-Za-z0-9_$.]*$""")
 
     fun prettyPrintOrNull(raw: String): String? {
         val trimmed = raw.trim()
         if (!looksLikeDataClass(trimmed)) return null
+        if (nestingDepth(trimmed) > MAX_DEPTH) return null
         return buildString { appendDataClass(trimmed, depth = 0) }
+    }
+
+    /** Max paren/bracket nesting depth, so absurdly deep input can be rejected before recursing. */
+    private fun nestingDepth(value: String): Int {
+        var depth = 0
+        var maxDepth = 0
+        for (c in value) {
+            when (c) {
+                '(', '[', '{' -> {
+                    depth++
+                    if (depth > maxDepth) maxDepth = depth
+                }
+                ')', ']', '}' -> depth--
+            }
+        }
+        return maxDepth
     }
 
     private fun looksLikeDataClass(value: String): Boolean {

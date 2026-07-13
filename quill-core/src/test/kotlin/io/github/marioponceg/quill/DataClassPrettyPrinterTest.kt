@@ -70,4 +70,10 @@ class DataClassPrettyPrinterTest {
         assertNull(DataClassPrettyPrinter.prettyPrintOrNull("Broken(unbalanced"))
         assertNull(DataClassPrettyPrinter.prettyPrintOrNull("""{"json":true}"""))
     }
+
+    @Test
+    fun `returns null for absurdly deep nesting instead of overflowing the stack`() {
+        val deeplyNested = "A(".repeat(100_000) + ")".repeat(100_000)
+        assertNull(DataClassPrettyPrinter.prettyPrintOrNull(deeplyNested))
+    }
 }
