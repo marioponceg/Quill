@@ -17,6 +17,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.marioponceg.quill.Quill
+import java.io.IOException
+import java.net.SocketTimeoutException
 
 private val log = Quill.logger("Demo")
 
@@ -31,11 +33,10 @@ fun DemoScreen() {
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                // Sections land in the next tasks:
-                // section("Levels", levelScenarios())               ← Task 3
-                // section("Fields & beautifier", fieldScenarios())  ← Task 3
-                // section("Throwable & chunking", errorScenarios()) ← Task 3
-                // section("Conduit HTTP", ...)                      ← Task 4
+                section("Levels", levelScenarios())
+                section("Fields & beautifier", fieldScenarios())
+                section("Throwable & chunking", errorScenarios())
+                // section("Conduit HTTP", ...)  ← Task 4
             }
         }
     }
@@ -64,3 +65,66 @@ private fun ScenarioButton(label: String, onClick: () -> Unit) {
         Text(label)
     }
 }
+
+data class Address(val street: String, val city: String)
+
+data class DemoUser(
+    val id: Int,
+    val name: String,
+    val address: Address,
+    val roles: List<String>,
+)
+
+private fun levelScenarios(): List<Pair<String, () -> Unit>> = listOf(
+    "Verbose" to { log.verbose("cache_probe") { "key" to "user:42"; "hit" to false } },
+    "Debug" to { log.debug("query_planned") { "table" to "users"; "rows" to 128 } },
+    "Info" to { log.info("user_login") { "userId" to 42; "method" to "oauth" } },
+    "Warn" to { log.warn("quota_near_limit") { "used" to 91.5; "limit" to 100 } },
+    "Error" to { log.error("sync_failed") { "retries" to 3; "cause" to "backend" } },
+)
+
+private fun fieldScenarios(): List<Pair<String, () -> Unit>> = listOf(
+    "Primitives + null" to {
+        log.info("primitives") {
+            "text" to "plain"
+            "int" to 42
+            "double" to 3.14
+            "bool" to true
+            "missing" to null
+        }
+    },
+    "Nested data class" to {
+        log.info("user_loaded") {
+            "user" to DemoUser(
+                id = 42,
+                name = "Mario",
+                address = Address(street = "Gran Vía 1", city = "Madrid"),
+                roles = listOf("admin", "editor"),
+            )
+        }
+    },
+    "Raw JSON string" to {
+        log.info("payload_received") {
+            "payload" to """{"id":42,"tags":["a","b"],"meta":{"active":true,"score":9.7}}"""
+        }
+    },
+    "List" to { log.info("batch_ready") { "ids" to listOf(1, 2, 3, 5, 8) } },
+)
+
+private fun errorScenarios(): List<Pair<String, () -> Unit>> = listOf(
+    "Error with exception" to {
+        log.error(
+            "sync_failed",
+            throwable = IOException(
+                "timeout after 30s",
+                SocketTimeoutException("read timed out"),
+            ),
+        ) { "retries" to 3 }
+    },
+    "Giant JSON (chunking)" to {
+        val items = (1..120).joinToString(separator = ",") { index ->
+            """{"id":$index,"name":"item-$index","enabled":${index % 2 == 0}}"""
+        }
+        log.debug("bulk_sync") { "items" to "[$items]" }
+    },
+)
