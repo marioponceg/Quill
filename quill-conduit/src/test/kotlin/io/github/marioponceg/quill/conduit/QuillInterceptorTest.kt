@@ -10,9 +10,12 @@ import io.github.marioponceg.quill.QuillLevel
 import io.github.marioponceg.quill.QuillLogger
 import io.github.marioponceg.quill.QuillValue
 import kotlinx.coroutines.test.runTest
+import java.io.IOException
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.TestTimeSource
@@ -157,5 +160,77 @@ class QuillInterceptorTest {
 
         assertEquals(200, response.code)
         assertEquals(body, response.body)
+    }
+
+    @Test
+    fun `non-2xx responses emit http_failure with kind http`() = runTest {
+        val time = TestTimeSource()
+        val engine = ConduitEngine {
+            time += 10.milliseconds
+            HttpResponse(code = 404, body = "not here".toByteArray())
+        }
+
+        val response = pipeline(interceptor(timeSource = time), engine).execute(request)
+
+        assertEquals(404, response.code)
+        val failure = sink.events.last()
+        assertEquals("http_failure", failure.name)
+        assertEquals(QuillLevel.Warn, failure.level)
+        assertEquals(QuillValue.Text("http"), failure.fields["kind"])
+        assertEquals(QuillValue.Number(404), failure.fields["code"])
+        assertEquals(QuillValue.Number(10L), failure.fields["durationMs"])
+        val requestId = (sink.events.first().fields.getValue("requestId") as QuillValue.Text).value
+        assertEquals(QuillValue.Text(requestId), failure.fields["requestId"])
+    }
+
+    @Test
+    fun `IOException emits http_failure with kind network and rethrows`() = runTest {
+        val boom = IOException("connection reset")
+        val engine = ConduitEngine { throw boom }
+
+        val thrown = assertFailsWith<IOException> {
+            pipeline(interceptor(), engine).execute(request)
+        }
+
+        assertSame(boom, thrown)
+        val failure = sink.events.last()
+        assertEquals("http_failure", failure.name)
+        assertEquals(QuillLevel.Warn, failure.level)
+        assertEquals(QuillValue.Text("network"), failure.fields["kind"])
+        assertSame(boom, failure.throwable)
+        assertTrue("durationMs" in failure.fields)
+        assertFalse("code" in failure.fields)
+    }
+
+    @Test
+    fun `failure events carry headers and body at Body level`() = runTest {
+        val engine = ConduitEngine {
+            HttpResponse(
+                code = 500,
+                headers = Headers.of("Content-Type" to "text/plain"),
+                body = "oops".toByteArray(),
+            )
+        }
+
+        pipeline(interceptor(level = BodyLevel.Body), engine).execute(request)
+
+        val failure = sink.events.last()
+        assertEquals("http_failure", failure.name)
+        assertEquals(
+            QuillValue.Structured("""{"Content-Type":"text/plain"}"""),
+            failure.fields["headers"],
+        )
+        assertEquals(QuillValue.Text("oops"), failure.fields["body"])
+    }
+
+    @Test
+    fun `None also swallows failures silently`() = runTest {
+        val engine = ConduitEngine { throw IOException("reset") }
+
+        assertFailsWith<IOException> {
+            pipeline(interceptor(level = BodyLevel.None), engine).execute(request)
+        }
+
+        assertTrue(sink.events.isEmpty())
     }
 }

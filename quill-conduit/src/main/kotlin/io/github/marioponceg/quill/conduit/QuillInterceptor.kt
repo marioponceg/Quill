@@ -7,6 +7,7 @@ import io.github.marioponceg.conduit.interceptor.ConduitInterceptor
 import io.github.marioponceg.quill.Quill
 import io.github.marioponceg.quill.QuillFieldBuilder
 import io.github.marioponceg.quill.QuillLogger
+import java.io.IOException
 import kotlin.random.Random
 import kotlin.time.TimeSource
 
@@ -48,14 +49,33 @@ public class QuillInterceptor(
         }
 
         val start = timeSource.markNow()
-        val response = chain.proceed(request)
+        val response = try {
+            chain.proceed(request)
+        } catch (exception: IOException) {
+            logger.warn("http_failure", throwable = exception) {
+                "requestId" to requestId
+                "kind" to "network"
+                "durationMs" to start.elapsedNow().inWholeMilliseconds
+            }
+            throw exception
+        }
         val durationMs = start.elapsedNow().inWholeMilliseconds
 
-        logger.info("http_response") {
-            "requestId" to requestId
-            "code" to response.code
-            "durationMs" to durationMs
-            appendPayload(headers = { response.headers }, body = { response.body })
+        if (response.isSuccessful) {
+            logger.info("http_response") {
+                "requestId" to requestId
+                "code" to response.code
+                "durationMs" to durationMs
+                appendPayload(headers = { response.headers }, body = { response.body })
+            }
+        } else {
+            logger.warn("http_failure") {
+                "requestId" to requestId
+                "kind" to "http"
+                "code" to response.code
+                "durationMs" to durationMs
+                appendPayload(headers = { response.headers }, body = { response.body })
+            }
         }
         return response
     }
