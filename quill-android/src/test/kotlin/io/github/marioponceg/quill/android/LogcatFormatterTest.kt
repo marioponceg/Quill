@@ -5,6 +5,7 @@ import io.github.marioponceg.quill.QuillLevel
 import io.github.marioponceg.quill.QuillValue
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class LogcatFormatterTest {
 
@@ -188,5 +189,33 @@ class LogcatFormatterTest {
     @Test
     fun `flat mode with no fields is just the event name`() {
         assertEquals(listOf("app_start"), LogcatFormatter(boxed = false).format(event(name = "app_start")))
+    }
+
+    @Test
+    fun `text values escape quotes, backslashes and control characters`() {
+        val lines = LogcatFormatter(boxed = true).format(
+            event(fields = mapOf("q" to QuillValue.Text("say \"hi\"\\now\nnext"))),
+        )
+        assertEquals("""│ q: "say \"hi\"\\now\nnext"""", lines[1])
+    }
+
+    @Test
+    fun `event names with control characters render escaped in the box header`() {
+        val lines = LogcatFormatter(boxed = true).format(event(name = "user\nlogin"))
+        assertTrue(lines.first().startsWith("┌─ user\\nlogin "))
+    }
+
+    @Test
+    fun `event names with control characters render escaped in flat mode`() {
+        val line = LogcatFormatter(boxed = false).format(event(name = "user\nlogin")).single()
+        assertTrue(line.startsWith("user\\nlogin"))
+    }
+
+    @Test
+    fun `flat text values stay on one line`() {
+        val line = LogcatFormatter(boxed = false).format(
+            event(fields = mapOf("msg" to QuillValue.Text("a\nb"))),
+        ).single()
+        assertEquals("""msg="a\nb"""", line.substringAfter("  "))
     }
 }
