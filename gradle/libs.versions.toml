@@ -1,6 +1,5 @@
 [versions]
 agp = "9.2.1"
-coreKtx = "1.19.0"
 kotlin = "2.2.10"
 kover = "0.9.8"
 conduit = "0.1.0"
@@ -9,7 +8,6 @@ composeBom = "2026.06.01"
 activityCompose = "1.13.0"
 
 [libraries]
-androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 kotlin-test-junit5 = { group = "org.jetbrains.kotlin", name = "kotlin-test-junit5", version.ref = "kotlin" }
 kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 kover-gradle-plugin = { group = "org.jetbrains.kotlinx", name = "kover-gradle-plugin", version.ref = "kover" }
