@@ -26,5 +26,6 @@ dependencyResolutionManagement {
 rootProject.name = "Quill"
 include(":quill-core")
 include(":quill-android")
+include(":quill-conduit")
 include(":demo")
  
