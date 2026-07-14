@@ -1,0 +1,161 @@
+package io.github.marioponceg.quill.conduit
+
+import io.github.marioponceg.conduit.engine.ConduitEngine
+import io.github.marioponceg.conduit.http.Headers
+import io.github.marioponceg.conduit.http.HttpMethod
+import io.github.marioponceg.conduit.http.HttpRequest
+import io.github.marioponceg.conduit.http.HttpResponse
+import io.github.marioponceg.conduit.interceptor.InterceptorPipeline
+import io.github.marioponceg.quill.QuillLevel
+import io.github.marioponceg.quill.QuillLogger
+import io.github.marioponceg.quill.QuillValue
+import kotlinx.coroutines.test.runTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TestTimeSource
+import kotlin.time.TimeSource
+
+class QuillInterceptorTest {
+
+    private val sink = FakeSink()
+    private val logger = QuillLogger("Http", sinks = listOf(sink))
+
+    private fun pipeline(
+        interceptor: QuillInterceptor,
+        engine: ConduitEngine,
+    ) = InterceptorPipeline(listOf(interceptor), engine)
+
+    private fun interceptor(
+        level: BodyLevel = BodyLevel.Basic,
+        redactHeaders: Set<String> = setOf("Authorization"),
+        timeSource: TimeSource = TestTimeSource(),
+    ) = QuillInterceptor(
+        level = level,
+        redactHeaders = redactHeaders,
+        logger = logger,
+        timeSource = timeSource,
+    )
+
+    private val request = HttpRequest(
+        url = "https://api.example.com/users",
+        method = HttpMethod.POST,
+        headers = Headers.of("Accept" to "application/json"),
+        body = """{"name":"mario"}""".toByteArray(),
+    )
+
+    @Test
+    fun `emits http_request and http_response correlated by requestId`() = runTest {
+        val engine = ConduitEngine { HttpResponse(code = 200) }
+
+        pipeline(interceptor(), engine).execute(request)
+
+        val (req, res) = sink.events.also { assertEquals(2, it.size) }
+        assertEquals("http_request", req.name)
+        assertEquals("http_response", res.name)
+        assertEquals(QuillLevel.Info, req.level)
+        assertEquals(QuillLevel.Info, res.level)
+        assertEquals("Http", req.origin)
+        val requestId = (req.fields.getValue("requestId") as QuillValue.Text).value
+        assertEquals(8, requestId.length)
+        assertTrue(requestId.all { it in "0123456789abcdef" })
+        assertEquals(requestId, (res.fields.getValue("requestId") as QuillValue.Text).value)
+    }
+
+    @Test
+    fun `Basic logs method url code and duration but no headers or body`() = runTest {
+        val time = TestTimeSource()
+        val engine = ConduitEngine {
+            time += 42.milliseconds
+            HttpResponse(code = 201)
+        }
+
+        pipeline(interceptor(timeSource = time), engine).execute(request)
+
+        val (req, res) = sink.events
+        assertEquals(QuillValue.Text("POST"), req.fields["method"])
+        assertEquals(QuillValue.Text("https://api.example.com/users"), req.fields["url"])
+        assertEquals(QuillValue.Number(201), res.fields["code"])
+        assertEquals(QuillValue.Number(42L), res.fields["durationMs"])
+        assertFalse("headers" in req.fields)
+        assertFalse("body" in req.fields)
+        assertFalse("headers" in res.fields)
+        assertFalse("body" in res.fields)
+    }
+
+    @Test
+    fun `Headers adds redacted request and response headers`() = runTest {
+        val authed = request.copy(
+            headers = Headers.of("Authorization" to "Bearer secret", "Accept" to "*/*"),
+        )
+        val engine = ConduitEngine {
+            HttpResponse(code = 200, headers = Headers.of("Content-Type" to "application/json"))
+        }
+
+        pipeline(interceptor(level = BodyLevel.Headers), engine).execute(authed)
+
+        val (req, res) = sink.events
+        assertEquals(
+            QuillValue.Structured("""{"Authorization":"██","Accept":"*/*"}"""),
+            req.fields["headers"],
+        )
+        assertEquals(
+            QuillValue.Structured("""{"Content-Type":"application/json"}"""),
+            res.fields["headers"],
+        )
+        assertFalse("body" in req.fields)
+        assertFalse("body" in res.fields)
+    }
+
+    @Test
+    fun `Body adds utf-8 decoded bodies and omits null bodies`() = runTest {
+        val engine = ConduitEngine {
+            HttpResponse(code = 200, body = """{"id":7}""".toByteArray())
+        }
+
+        pipeline(interceptor(level = BodyLevel.Body), engine).execute(request)
+        pipeline(interceptor(level = BodyLevel.Body), engine)
+            .execute(request.copy(body = null))
+
+        val (req, res) = sink.events
+        assertEquals(QuillValue.Structured("""{"name":"mario"}"""), req.fields["body"])
+        assertEquals(QuillValue.Structured("""{"id":7}"""), res.fields["body"])
+        assertFalse("body" in sink.events[2].fields)
+    }
+
+    @Test
+    fun `None is a pass-through emitting no events`() = runTest {
+        val engine = ConduitEngine { HttpResponse(code = 200) }
+
+        val response = pipeline(interceptor(level = BodyLevel.None), engine).execute(request)
+
+        assertEquals(200, response.code)
+        assertTrue(sink.events.isEmpty())
+    }
+
+    @Test
+    fun `http_request is emitted before the engine runs`() = runTest {
+        var eventsAtEngineTime = -1
+        val engine = ConduitEngine {
+            eventsAtEngineTime = sink.events.size
+            HttpResponse(code = 200)
+        }
+
+        pipeline(interceptor(), engine).execute(request)
+
+        assertEquals(1, eventsAtEngineTime)
+    }
+
+    @Test
+    fun `returns the response unchanged`() = runTest {
+        val body = "payload".toByteArray()
+        val engine = ConduitEngine { HttpResponse(code = 200, body = body) }
+
+        val response = pipeline(interceptor(), engine).execute(request)
+
+        assertEquals(200, response.code)
+        assertEquals(body, response.body)
+    }
+}
