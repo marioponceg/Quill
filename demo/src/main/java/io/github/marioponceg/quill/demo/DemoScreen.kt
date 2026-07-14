@@ -14,18 +14,35 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.marioponceg.conduit.conduit
+import io.github.marioponceg.conduit.engine.okhttp.OkHttpEngine
+import io.github.marioponceg.conduit.http.HttpRequest
 import io.github.marioponceg.quill.Quill
+import io.github.marioponceg.quill.conduit.BodyLevel
+import io.github.marioponceg.quill.conduit.QuillInterceptor
 import java.io.IOException
 import java.net.SocketTimeoutException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 private val log = Quill.logger("Demo")
+
+private val client by lazy {
+    conduit {
+        engine = OkHttpEngine()
+        baseUrl = "https://jsonplaceholder.typicode.com"
+        interceptors += QuillInterceptor(level = BodyLevel.Body)
+    }
+}
 
 @Composable
 fun DemoScreen() {
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
+            val scope = rememberCoroutineScope()
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -36,7 +53,7 @@ fun DemoScreen() {
                 section("Levels", levelScenarios())
                 section("Fields & beautifier", fieldScenarios())
                 section("Throwable & chunking", errorScenarios())
-                // section("Conduit HTTP", ...)  ← Task 4
+                section("Conduit HTTP", conduitScenarios(scope))
             }
         }
     }
@@ -126,5 +143,22 @@ private fun errorScenarios(): List<Pair<String, () -> Unit>> = listOf(
             """{"id":$index,"name":"item-$index","enabled":${index % 2 == 0}}"""
         }
         log.debug("bulk_sync") { "items" to "[$items]" }
+    },
+)
+
+private fun conduitScenarios(scope: CoroutineScope): List<Pair<String, () -> Unit>> = listOf(
+    // execute() maps failures to ConduitResult values instead of throwing, and the
+    // interceptor has already logged the exchange — the result is deliberately unused.
+    "GET 200 with JSON body" to {
+        scope.launch { client.execute(HttpRequest("/users/1")) }
+        Unit
+    },
+    "GET 404 (http_failure kind=http)" to {
+        scope.launch { client.execute(HttpRequest("/definitely-not-a-route")) }
+        Unit
+    },
+    "Invalid host (http_failure kind=network)" to {
+        scope.launch { client.execute(HttpRequest("https://quill.invalid/ping")) }
+        Unit
     },
 )
