@@ -14,7 +14,13 @@ internal object JsonPrettyPrinter {
 
     fun prettyPrintOrNull(raw: String): String? {
         val out = StringBuilder()
-        return if (parse(raw, out)) out.toString() else null
+        return if (parse(raw, out, pretty = true)) out.toString() else null
+    }
+
+    /** Minified emission of the same grammar: no whitespace outside strings. */
+    fun compactOrNull(raw: String): String? {
+        val out = StringBuilder()
+        return if (parse(raw, out, pretty = false)) out.toString() else null
     }
 
     /**
@@ -22,13 +28,13 @@ internal object JsonPrettyPrinter {
      * without building the pretty-printed output. Shares the [Parser] traversal with
      * [prettyPrintOrNull] so the two never diverge on what counts as valid JSON.
      */
-    internal fun isValidJson(raw: String): Boolean = parse(raw, out = null)
+    internal fun isValidJson(raw: String): Boolean = parse(raw, out = null, pretty = true)
 
     /** Runs the shared grammar traversal, appending to [out] only when it is non-null. */
-    private fun parse(raw: String, out: StringBuilder?): Boolean {
+    private fun parse(raw: String, out: StringBuilder?, pretty: Boolean): Boolean {
         val trimmed = raw.trim()
         if (trimmed.isEmpty() || (trimmed.first() != '{' && trimmed.first() != '[')) return false
-        val parser = Parser(trimmed)
+        val parser = Parser(trimmed, pretty)
         return try {
             parser.appendValue(out, depth = 0)
             parser.skipWhitespace()
@@ -40,7 +46,7 @@ internal object JsonPrettyPrinter {
 
     private class MalformedJson : Exception()
 
-    private class Parser(private val source: String) {
+    private class Parser(private val source: String, private val pretty: Boolean) {
         private var index = 0
 
         val atEnd: Boolean get() = index >= source.length
@@ -74,7 +80,7 @@ internal object JsonPrettyPrinter {
                 out?.append("{}")
                 return
             }
-            out?.append("{\n")
+            out?.append(if (pretty) "{\n" else "{")
             while (true) {
                 skipWhitespace()
                 indent(out, depth + 1)
@@ -82,18 +88,20 @@ internal object JsonPrettyPrinter {
                 out?.append(key)
                 skipWhitespace()
                 expect(':')
-                out?.append(": ")
+                out?.append(if (pretty) ": " else ":")
                 appendValue(out, depth + 1)
                 skipWhitespace()
                 when (peek()) {
                     ',' -> {
                         index++
-                        out?.append(",\n")
+                        out?.append(if (pretty) ",\n" else ",")
                     }
                     '}' -> {
                         index++
-                        out?.append('\n')
-                        indent(out, depth)
+                        if (pretty) {
+                            out?.append('\n')
+                            indent(out, depth)
+                        }
                         out?.append('}')
                         return
                     }
@@ -110,7 +118,7 @@ internal object JsonPrettyPrinter {
                 out?.append("[]")
                 return
             }
-            out?.append("[\n")
+            out?.append(if (pretty) "[\n" else "[")
             while (true) {
                 skipWhitespace()
                 indent(out, depth + 1)
@@ -119,12 +127,14 @@ internal object JsonPrettyPrinter {
                 when (peek()) {
                     ',' -> {
                         index++
-                        out?.append(",\n")
+                        out?.append(if (pretty) ",\n" else ",")
                     }
                     ']' -> {
                         index++
-                        out?.append('\n')
-                        indent(out, depth)
+                        if (pretty) {
+                            out?.append('\n')
+                            indent(out, depth)
+                        }
                         out?.append(']')
                         return
                     }
@@ -173,7 +183,7 @@ internal object JsonPrettyPrinter {
         }
 
         private fun indent(out: StringBuilder?, depth: Int) {
-            if (out == null) return
+            if (out == null || !pretty) return
             repeat(depth) { out.append(INDENT) }
         }
     }

@@ -48,4 +48,46 @@ class QuillBeautifierTest {
         val deeplyNested = "A(k=".repeat(100_000) + ")".repeat(100_000)
         assertEquals(deeplyNested, QuillBeautifier.beautify(deeplyNested))
     }
+
+    @Test
+    fun `compacts JSON to a single line`() {
+        assertEquals(
+            """{"id":42,"tags":["a","b"],"meta":{"active":true}}""",
+            QuillBeautifier.compact(
+                """
+                {
+                    "id": 42,
+                    "tags": [ "a", "b" ],
+                    "meta": { "active": true }
+                }
+                """.trimIndent(),
+            ),
+        )
+    }
+
+    @Test
+    fun `compact preserves whitespace inside JSON strings`() {
+        assertEquals(
+            """{"note":"line one\nline two","pad":"  x  "}""",
+            QuillBeautifier.compact("""{ "note": "line one\nline two", "pad": "  x  " }"""),
+        )
+    }
+
+    @Test
+    fun `compact collapses newlines in non-JSON input`() {
+        assertEquals(
+            "UserDto( id = 42, name = \"Mario\" )",
+            QuillBeautifier.compact("UserDto(\n    id = 42,\n    name = \"Mario\"\n)"),
+        )
+    }
+
+    @Test
+    fun `compact returns single-line non-JSON input trimmed and otherwise untouched`() {
+        assertEquals("plain value", QuillBeautifier.compact("  plain value "))
+    }
+
+    @Test
+    fun `compact never throws on malformed JSON, degrades to collapsing`() {
+        assertEquals("{ \"broken\": }", QuillBeautifier.compact("{ \"broken\":\n}"))
+    }
 }
