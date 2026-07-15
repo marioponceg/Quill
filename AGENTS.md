@@ -58,7 +58,8 @@ implementing.
 - Superpowers specs/plans live in `docs/superpowers/` locally but are gitignored — never
   committed nor PR'd. The relevant AGENTS.md sections are their durable record.
 - Detekt is a build gate: `maxIssues: 0`, config in `config/detekt/detekt.yml`
-  (deviations from defaults only), formatting rules with autoCorrect. Rule `excludes`
+  (deviations from defaults only), formatting rules included (fix issues manually or via
+  the IDE; autoCorrect is not wired into the Gradle runs). Rule `excludes`
   override detekt's defaults — restore the default globs when adding to them. Run
   `./gradlew detekt` before pushing.
 - `*.api` files (binary-compatibility-validator) are the frozen public API contract.
