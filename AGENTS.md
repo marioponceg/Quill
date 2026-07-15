@@ -67,3 +67,13 @@ implementing.
   review the diff in the PR. The `demo` app is excluded. `quill-android` is also excluded
   until BCV supports AGP built-in Kotlin — its surface is `LogcatSink` plus the validated
   `quill-core` it re-exports.
+- Releases are tag-driven: bump `VERSION_NAME` in `gradle.properties`, merge, push tag
+  `v<version>` — the Release workflow verifies the tag matches, runs all gates, and
+  uploads signed artifacts to the Central Portal; the actual release is manual from
+  central.sonatype.com. Publishing lives in the `quill.publishing` convention plugin
+  (Dokka + vanniktech maven-publish); coordinates and POM metadata come from
+  `gradle.properties` (shared) and each module's `gradle.properties` (artifact id, name,
+  description). Secrets required: `MAVEN_CENTRAL_USERNAME`, `MAVEN_CENTRAL_PASSWORD`,
+  `SIGNING_KEY`, `SIGNING_KEY_PASSWORD` (same names as Conduit). `demo` is never
+  published. `quill-android` publishes an empty javadoc jar (Dokka does not yet support
+  AGP built-in Kotlin — see the comment in its build script); revisit on Dokka/AGP upgrades.

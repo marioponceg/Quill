@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/marioponceg/Quill/actions/workflows/ci.yml/badge.svg)](https://github.com/marioponceg/Quill/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/marioponceg/Quill/branch/main/graph/badge.svg)](https://codecov.io/gh/marioponceg/Quill)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.marioponceg/quill-core)](https://central.sonatype.com/search?q=g%3Aio.github.marioponceg+quill)
 
 Structured logging for Android and the JVM — every log is an event with typed fields,
 rendered as pretty boxed logcat output by sinks that never crash your app.
@@ -47,10 +48,17 @@ I/Quill.AuthRepository: ┌─ user_login ────────────�
 | `quill-conduit` | `QuillInterceptor`: every Conduit HTTP exchange logged as Quill events |
 | `demo` | Android showcase app exercising every feature; never published |
 
-> Maven Central publishing is on the way under the `io.github.marioponceg` namespace.
-> Until then, consume Quill via a Gradle
-> [composite build](https://docs.gradle.org/current/userguide/composite_builds.html)
-> (`includeBuild`) or `mavenLocal`.
+## Installation
+
+Quill is published on Maven Central:
+
+```kotlin
+dependencies {
+    implementation("io.github.marioponceg:quill-core:0.1.0")      // pure Kotlin/JVM core
+    implementation("io.github.marioponceg:quill-android:0.1.0")   // LogcatSink (brings core via api)
+    implementation("io.github.marioponceg:quill-conduit:0.1.0")   // Conduit interceptor
+}
+```
 
 ## Getting started
 
