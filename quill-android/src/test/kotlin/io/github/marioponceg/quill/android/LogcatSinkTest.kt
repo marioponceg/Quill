@@ -76,14 +76,14 @@ class LogcatSinkTest {
     }
 
     @Test
-    fun `large events split across multiple calls of at most 4000 chars`() {
+    fun `large events split across multiple calls of at most 4000 UTF-8 bytes`() {
         val printer = RecordingPrinter()
         val huge = QuillValue.Structured("x".repeat(12000))
         LogcatSink(tagPrefix = "Quill", minLevel = QuillLevel.Verbose, boxed = true, printer = printer::print)
             .write(event(fields = linkedMapOf("blob" to huge)))
 
         assertTrue(printer.calls.size > 1)
-        assertTrue(printer.calls.all { it.third.length <= LogcatChunker.MAX_MESSAGE_LENGTH })
+        assertTrue(printer.calls.all { it.third.toByteArray(Charsets.UTF_8).size <= LogcatChunker.MAX_MESSAGE_BYTES })
         assertTrue(printer.calls.drop(1).all { it.third.startsWith("│ ") })
     }
 }

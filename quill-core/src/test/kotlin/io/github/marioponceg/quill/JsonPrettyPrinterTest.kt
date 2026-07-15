@@ -160,4 +160,23 @@ class JsonPrettyPrinterTest {
             )
         }
     }
+
+    @Test
+    fun `compactOrNull minifies nested structures`() {
+        assertEquals(
+            """[{"a":1},{"b":[true,null,-1.5e3]}]""",
+            JsonPrettyPrinter.compactOrNull("""[ { "a": 1 }, { "b": [ true, null, -1.5e3 ] } ]"""),
+        )
+    }
+
+    @Test
+    fun `compactOrNull returns null for invalid JSON exactly like prettyPrintOrNull`() {
+        assertEquals(null, JsonPrettyPrinter.compactOrNull("not json"))
+        assertEquals(null, JsonPrettyPrinter.compactOrNull("""{"open": true"""))
+    }
+
+    @Test
+    fun `compactOrNull keeps empty containers as-is`() {
+        assertEquals("""{"a":{},"b":[]}""", JsonPrettyPrinter.compactOrNull("""{ "a": {}, "b": [] }"""))
+    }
 }

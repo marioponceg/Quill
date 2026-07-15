@@ -5,6 +5,7 @@ import io.github.marioponceg.quill.QuillLevel
 import io.github.marioponceg.quill.QuillValue
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class LogcatFormatterTest {
 
@@ -173,12 +174,12 @@ class LogcatFormatterTest {
     }
 
     @Test
-    fun `flat mode keeps structured values raw and appends the throwable header`() {
+    fun `flat mode compacts structured values and appends the throwable header`() {
         val boom = java.io.IOException("timeout").apply { stackTrace = emptyArray() }
         val lines = LogcatFormatter(boxed = false).format(
             event(
                 name = "sync_failed",
-                fields = linkedMapOf("payload" to QuillValue.Structured("""{"a":1}""")),
+                fields = linkedMapOf("payload" to QuillValue.Structured("{\n  \"a\": 1\n}")),
                 throwable = boom,
             ),
         )
@@ -186,7 +187,51 @@ class LogcatFormatterTest {
     }
 
     @Test
+    fun `flat structured values with server-side newlines compact to one line`() {
+        val line = LogcatFormatter(boxed = false).format(
+            event(fields = mapOf("body" to QuillValue.Structured("{\n  \"id\": 1,\n  \"ok\": true\n}"))),
+        ).single()
+        assertEquals("""body={"id":1,"ok":true}""", line.substringAfter("  "))
+    }
+
+    @Test
+    fun `flat non-JSON structured values collapse newlines`() {
+        val line = LogcatFormatter(boxed = false).format(
+            event(fields = mapOf("dto" to QuillValue.Structured("UserDto(\n    id = 1\n)"))),
+        ).single()
+        assertEquals("dto=UserDto( id = 1 )", line.substringAfter("  "))
+    }
+
+    @Test
     fun `flat mode with no fields is just the event name`() {
         assertEquals(listOf("app_start"), LogcatFormatter(boxed = false).format(event(name = "app_start")))
+    }
+
+    @Test
+    fun `text values escape quotes, backslashes and control characters`() {
+        val lines = LogcatFormatter(boxed = true).format(
+            event(fields = mapOf("q" to QuillValue.Text("say \"hi\"\\now\nnext"))),
+        )
+        assertEquals("""│ q: "say \"hi\"\\now\nnext"""", lines[1])
+    }
+
+    @Test
+    fun `event names with control characters render escaped in the box header`() {
+        val lines = LogcatFormatter(boxed = true).format(event(name = "user\nlogin"))
+        assertTrue(lines.first().startsWith("┌─ user\\nlogin "))
+    }
+
+    @Test
+    fun `event names with control characters render escaped in flat mode`() {
+        val line = LogcatFormatter(boxed = false).format(event(name = "user\nlogin")).single()
+        assertTrue(line.startsWith("user\\nlogin"))
+    }
+
+    @Test
+    fun `flat text values stay on one line`() {
+        val line = LogcatFormatter(boxed = false).format(
+            event(fields = mapOf("msg" to QuillValue.Text("a\nb"))),
+        ).single()
+        assertEquals("""msg="a\nb"""", line.substringAfter("  "))
     }
 }
