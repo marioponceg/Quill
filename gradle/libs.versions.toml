@@ -3,6 +3,7 @@ agp = "9.2.1"
 kotlin = "2.2.10"
 kover = "0.9.8"
 detekt = "1.23.8"
+binaryCompatibilityValidator = "0.18.0"
 conduit = "0.1.0"
 coroutines = "1.10.2"
 composeBom = "2026.06.01"
@@ -28,4 +29,5 @@ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binaryCompatibilityValidator" }
 
