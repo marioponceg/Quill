@@ -8,6 +8,9 @@ import io.github.marioponceg.quill.Quill
 import io.github.marioponceg.quill.QuillFieldBuilder
 import io.github.marioponceg.quill.QuillLogger
 import java.io.IOException
+import java.nio.ByteBuffer
+import java.nio.CharBuffer
+import java.nio.charset.CodingErrorAction
 import kotlin.random.Random
 import kotlin.time.TimeSource
 
@@ -22,6 +25,10 @@ import kotlin.time.TimeSource
  * `ConduitResult` — so serialization failures (which happen after the pipeline)
  * are not observable and produce no event.
  *
+ * Bodies are rendered only when they decode as UTF-8 — binary payloads log a size
+ * placeholder — and at most [maxBodyBytes] bytes are rendered, with the omitted
+ * remainder noted.
+ *
  * ```
  * val client = conduit {
  *     engine = OkHttpEngine()
@@ -32,6 +39,7 @@ import kotlin.time.TimeSource
 public class QuillInterceptor(
     private val level: BodyLevel = BodyLevel.Basic,
     private val redactHeaders: Set<String> = setOf("Authorization"),
+    private val maxBodyBytes: Long = DEFAULT_MAX_BODY_BYTES,
     private val logger: QuillLogger = Quill.logger(ORIGIN),
     private val timeSource: TimeSource = TimeSource.Monotonic,
 ) : ConduitInterceptor {
@@ -88,8 +96,36 @@ public class QuillInterceptor(
             "headers" to headers().toRedactedJson(redactHeaders)
         }
         if (level >= BodyLevel.Body) {
-            body()?.let { "body" to it.toString(Charsets.UTF_8) }
+            body()?.let { "body" to renderBody(it) }
         }
+    }
+
+    private fun renderBody(body: ByteArray): String {
+        if (body.size <= maxBodyBytes) {
+            return decodeUtf8OrNull(body, endOfInput = true)
+                ?: "(binary body, ${body.size} bytes)"
+        }
+        val prefix = body.copyOf(maxBodyBytes.toInt())
+        // endOfInput = false: a multibyte character cut by the cap is left undecoded
+        // instead of reported as malformed, so truncation never misclassifies text
+        // as binary.
+        val decoded = decodeUtf8OrNull(prefix, endOfInput = false)
+            ?: return "(binary body, ${body.size} bytes)"
+        val omitted = body.size - decoded.toByteArray(Charsets.UTF_8).size
+        return "$decoded… (+$omitted bytes)"
+    }
+
+    /** Strict UTF-8 decode: returns null on any malformed or unmappable sequence. */
+    private fun decodeUtf8OrNull(bytes: ByteArray, endOfInput: Boolean): String? {
+        val decoder = Charsets.UTF_8.newDecoder()
+            .onMalformedInput(CodingErrorAction.REPORT)
+            .onUnmappableCharacter(CodingErrorAction.REPORT)
+        val out = CharBuffer.allocate(bytes.size)
+        val result = decoder.decode(ByteBuffer.wrap(bytes), out, endOfInput)
+        if (result.isError) return null
+        if (endOfInput && decoder.flush(out).isError) return null
+        out.flip()
+        return out.toString()
     }
 
     private fun newRequestId(): String =
@@ -100,5 +136,6 @@ public class QuillInterceptor(
     private companion object {
         private const val ORIGIN = "Http"
         private const val REQUEST_ID_BYTES = 4
+        private const val DEFAULT_MAX_BODY_BYTES = 65_536L
     }
 }
