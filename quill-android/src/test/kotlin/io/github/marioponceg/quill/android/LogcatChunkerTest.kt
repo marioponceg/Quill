@@ -98,4 +98,15 @@ class LogcatChunkerTest {
     fun `empty input produces no chunks`() {
         assertEquals(emptyList(), LogcatChunker.chunk(emptyList(), continuationPrefix = "│ "))
     }
+
+    @Test
+    fun `continuation budget accounts for the multibyte production prefix`() {
+        // "│ " is 4 UTF-8 bytes: continuations get a 6-byte budget under maxBytes = 10.
+        val chunks = LogcatChunker.chunk(listOf("x".repeat(25)), continuationPrefix = "│ ", maxBytes = 10)
+        assertEquals(
+            listOf("x".repeat(10), "│ " + "x".repeat(6), "│ " + "x".repeat(6), "│ " + "x".repeat(3)),
+            chunks,
+        )
+        assertTrue(chunks.all { it.toByteArray(Charsets.UTF_8).size <= 10 })
+    }
 }
