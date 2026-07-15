@@ -174,7 +174,7 @@ class LogcatFormatterTest {
     }
 
     @Test
-    fun `flat mode keeps structured values raw and appends the throwable header`() {
+    fun `flat mode compacts structured values and appends the throwable header`() {
         val boom = java.io.IOException("timeout").apply { stackTrace = emptyArray() }
         val lines = LogcatFormatter(boxed = false).format(
             event(
@@ -184,6 +184,22 @@ class LogcatFormatterTest {
             ),
         )
         assertEquals(listOf("""sync_failed  payload={"a":1}  ▼ IOException: timeout"""), lines)
+    }
+
+    @Test
+    fun `flat structured values with server-side newlines compact to one line`() {
+        val line = LogcatFormatter(boxed = false).format(
+            event(fields = mapOf("body" to QuillValue.Structured("{\n  \"id\": 1,\n  \"ok\": true\n}"))),
+        ).single()
+        assertEquals("""body={"id":1,"ok":true}""", line.substringAfter("  "))
+    }
+
+    @Test
+    fun `flat non-JSON structured values collapse newlines`() {
+        val line = LogcatFormatter(boxed = false).format(
+            event(fields = mapOf("dto" to QuillValue.Structured("UserDto(\n    id = 1\n)"))),
+        ).single()
+        assertEquals("dto=UserDto( id = 1 )", line.substringAfter("  "))
     }
 
     @Test

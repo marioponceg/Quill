@@ -8,7 +8,7 @@ import io.github.marioponceg.quill.QuillValue
  * Pure formatting for [LogcatSink]: event in, logcat lines out. Kept free of any
  * Android API so it is testable on the JVM. With [boxed] (the default) each event
  * is delimited by a Unicode box so interleaved multi-line logs from concurrent
- * threads stay readable; `boxed = false` renders one flat line per event.
+ * threads stay readable; `boxed = false` renders one flat line per event (structured values minified).
  */
 public class LogcatFormatter(
     private val boxed: Boolean = true,
@@ -43,7 +43,7 @@ public class LogcatFormatter(
     }
 
     private fun renderFlat(value: QuillValue): String = when (value) {
-        is QuillValue.Structured -> value.raw
+        is QuillValue.Structured -> QuillBeautifier.compact(value.raw)
         else -> renderBoxed(value)
     }
 
