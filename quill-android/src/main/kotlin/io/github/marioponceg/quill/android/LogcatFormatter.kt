@@ -10,11 +10,11 @@ import io.github.marioponceg.quill.QuillValue
  * is delimited by a Unicode box so interleaved multi-line logs from concurrent
  * threads stay readable; `boxed = false` renders one flat line per event (structured values minified).
  */
-public class LogcatFormatter(
+internal class LogcatFormatter(
     private val boxed: Boolean = true,
 ) {
 
-    public fun format(event: QuillEvent): List<String> =
+    fun format(event: QuillEvent): List<String> =
         if (boxed) formatBoxed(event) else listOf(formatFlat(event))
 
     private fun formatBoxed(event: QuillEvent): List<String> = buildList {
