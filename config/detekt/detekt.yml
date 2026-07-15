@@ -14,7 +14,7 @@ style:
   ForbiddenComment:
     active: false # TODO/FIXME comments are allowed; they are tracked in PRs
   MagicNumber:
-    excludes: ['**/demo/**'] # showcase literals in the demo app are sample data, not constants
+    excludes: ['**/demo/**', '**/src/test/**'] # showcase literals in the demo app are sample data, not constants; test files use literal values for clarity
 
 naming:
   FunctionNaming:
