@@ -36,6 +36,12 @@ jobs:
       - name: Build, run unit tests and lint
         run: ./gradlew build lint koverXmlReport :quill-android:koverXmlReportDebug :quill-android:koverVerifyDebug
 
+      - name: Static analysis (detekt)
+        run: ./gradlew detekt
+
+      - name: API compatibility check
+        run: ./gradlew apiCheck
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
