@@ -18,8 +18,8 @@ import io.github.marioponceg.quill.QuillSink
  * Android Studio filters like `tag~:^Quill\.` match all Quill logs and
  * `tag:Quill.AuthRepository` matches one origin; pass `tagPrefix = null` for
  * bare origins. [minLevel] filters on top of the global `quill { }` level.
- * `boxed = false` renders flat single lines. Messages are chunked at 4000
- * chars so large payloads survive logcat truncation.
+ * `boxed = false` renders flat single lines. Messages are chunked at 4000 UTF-8
+ * bytes so large payloads survive logcat truncation.
  */
 public class LogcatSink internal constructor(
     private val tagPrefix: String?,

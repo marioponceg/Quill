@@ -83,7 +83,7 @@ class LogcatSinkTest {
             .write(event(fields = linkedMapOf("blob" to huge)))
 
         assertTrue(printer.calls.size > 1)
-        assertTrue(printer.calls.all { it.third.length <= LogcatChunker.MAX_MESSAGE_LENGTH })
+        assertTrue(printer.calls.all { it.third.length <= LogcatChunker.MAX_MESSAGE_BYTES })
         assertTrue(printer.calls.drop(1).all { it.third.startsWith("│ ") })
     }
 }
