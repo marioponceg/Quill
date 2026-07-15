@@ -43,8 +43,9 @@ mavenPublishing {
             sourcesJar = true,
             // AGP 9's built-in-Kotlin javadoc generation task (javaDocReleaseGeneration) drives
             // Dokka through descriptor-based analysis, which fails to resolve this module's
-            // compiled classes (see task-1-report.md). Ship an empty javadoc jar instead so the
-            // publication still satisfies Maven Central's javadoc-jar requirement.
+            // compiled classes. Ship an empty javadoc jar instead so the publication still
+            // satisfies Maven Central's javadoc-jar requirement; revisit on Dokka/AGP/vanniktech
+            // upgrades (a JavadocJar.Empty()-style option would remove the afterEvaluate below).
             publishJavadocJar = false,
         ),
     )

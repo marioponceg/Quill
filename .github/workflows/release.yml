@@ -7,6 +7,11 @@ on:
 permissions:
   contents: read
 
+# Serialize releases: two near-simultaneous tag pushes must not race two Portal uploads.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   publish:
     name: Publish to Maven Central
