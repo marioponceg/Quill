@@ -1,7 +1,10 @@
+import com.vanniktech.maven.publish.AndroidSingleVariantLibrary
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kover)
     alias(libs.plugins.detekt)
+    id("quill.publishing")
 }
 
 android {
@@ -31,6 +34,30 @@ android {
 detekt {
     buildUponDefaultConfig = true
     config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+}
+
+mavenPublishing {
+    configure(
+        AndroidSingleVariantLibrary(
+            variant = "release",
+            sourcesJar = true,
+            // AGP 9's built-in-Kotlin javadoc generation task (javaDocReleaseGeneration) drives
+            // Dokka through descriptor-based analysis, which fails to resolve this module's
+            // compiled classes (see task-1-report.md). Ship an empty javadoc jar instead so the
+            // publication still satisfies Maven Central's javadoc-jar requirement.
+            publishJavadocJar = false,
+        ),
+    )
+}
+
+val emptyJavadocJar = tasks.register<Jar>("emptyJavadocJar") {
+    archiveClassifier.set("javadoc")
+}
+
+afterEvaluate {
+    publishing.publications.withType<MavenPublication>().configureEach {
+        artifact(emptyJavadocJar)
+    }
 }
 
 dependencies {

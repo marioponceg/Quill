@@ -9,6 +9,10 @@ plugins {
     alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.detekt)
     alias(libs.plugins.binary.compatibility.validator)
+    alias(libs.plugins.dokka) apply false
+    // maven-publish additionally NEEDS the shared classloader: its Central staging build
+    // service must be one type across sibling modules or publishing fails to configure.
+    alias(libs.plugins.maven.publish) apply false
 }
 
 detekt {

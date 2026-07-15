@@ -2,13 +2,15 @@ import org.gradle.accessors.dm.LibrariesForLibs
 
 /**
  * Convention plugin for Quill's pure-JVM library modules: Kotlin/JVM with explicit API
- * mode, detekt (with formatting rules), Kover, and the JUnit 5 platform with kotlin-test.
+ * mode, detekt (with formatting rules), Kover, the JUnit 5 platform with kotlin-test,
+ * Dokka and Maven Central publishing.
  * Verification enforces the project's 90% minimum line coverage.
  */
 plugins {
     kotlin("jvm")
     id("io.gitlab.arturbosch.detekt")
     id("org.jetbrains.kotlinx.kover")
+    id("quill.publishing")
 }
 
 val libs = the<LibrariesForLibs>()
