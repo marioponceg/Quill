@@ -14,7 +14,20 @@ style:
   ForbiddenComment:
     active: false # TODO/FIXME comments are allowed; they are tracked in PRs
   MagicNumber:
-    excludes: ['**/demo/**', '**/src/test/**'] # showcase literals in the demo app are sample data, not constants; test files use literal values for clarity
+    # Overriding excludes replaces detekt's defaults, so the default test-source globs are
+    # restored here alongside the demo carve-out (showcase literals are sample data).
+    excludes:
+      [
+        '**/demo/**',
+        '**/test/**',
+        '**/androidTest/**',
+        '**/commonTest/**',
+        '**/jvmTest/**',
+        '**/androidUnitTest/**',
+        '**/androidInstrumentedTest/**',
+        '**/jsTest/**',
+        '**/iosTest/**',
+      ]
 
 naming:
   FunctionNaming:
