@@ -29,6 +29,11 @@ import kotlin.time.TimeSource
  * placeholder — and at most [maxBodyBytes] bytes are rendered, with the omitted
  * remainder noted.
  *
+ * Placement relative to retry interceptors decides what you observe: registered
+ * *after* a `RetryInterceptor` in the list, this interceptor sits closer to the
+ * engine and logs one request/response pair per attempt; registered *before* it,
+ * it logs one pair per logical call, with `durationMs` spanning all attempts.
+ *
  * ```
  * val client = conduit {
  *     engine = OkHttpEngine()
