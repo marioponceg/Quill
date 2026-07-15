@@ -5,7 +5,8 @@ package io.github.marioponceg.quill.android
  * into messages of at most [MAX_MESSAGE_BYTES] UTF-8 bytes so large payloads survive
  * across multiple `Log.println` calls; over-long lines are split at code-point
  * boundaries and their continuation pieces get the continuation prefix so the box is
- * preserved.
+ * preserved; a single code point or prefix that cannot fit degrades to a slight
+ * overflow instead of looping.
  */
 internal object LogcatChunker {
 

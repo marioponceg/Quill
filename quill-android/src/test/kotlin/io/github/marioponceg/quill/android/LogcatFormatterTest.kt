@@ -179,7 +179,7 @@ class LogcatFormatterTest {
         val lines = LogcatFormatter(boxed = false).format(
             event(
                 name = "sync_failed",
-                fields = linkedMapOf("payload" to QuillValue.Structured("""{"a":1}""")),
+                fields = linkedMapOf("payload" to QuillValue.Structured("{\n  \"a\": 1\n}")),
                 throwable = boom,
             ),
         )

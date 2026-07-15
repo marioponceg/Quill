@@ -76,7 +76,7 @@ class LogcatSinkTest {
     }
 
     @Test
-    fun `large events split across multiple calls of at most 4000 chars`() {
+    fun `large events split across multiple calls of at most 4000 UTF-8 bytes`() {
         val printer = RecordingPrinter()
         val huge = QuillValue.Structured("x".repeat(12000))
         LogcatSink(tagPrefix = "Quill", minLevel = QuillLevel.Verbose, boxed = true, printer = printer::print)

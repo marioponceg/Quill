@@ -1,10 +1,11 @@
 package io.github.marioponceg.quill
 
 /**
- * Renders [QuillValue.Structured] raw content for humans: JSON and data class
- * toString() are pretty-printed with 4-space indent (or minified); anything else is
- * returned unchanged. Never throws — degradation, not exceptions. Shared by LogcatSink
- * (quill-android) and QuillInterceptor (quill-conduit).
+ * Renders [QuillValue.Structured] raw content for humans: [beautify] pretty-prints
+ * JSON and data class toString() with 4-space indent; [compact] renders them as a
+ * single line. Anything unparseable is returned unchanged. Never throws — degradation,
+ * not exceptions. Shared by LogcatSink (quill-android) and QuillInterceptor
+ * (quill-conduit).
  */
 public object QuillBeautifier {
 
