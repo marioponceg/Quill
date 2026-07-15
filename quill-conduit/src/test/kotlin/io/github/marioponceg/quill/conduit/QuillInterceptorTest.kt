@@ -6,6 +6,7 @@ import io.github.marioponceg.conduit.http.HttpMethod
 import io.github.marioponceg.conduit.http.HttpRequest
 import io.github.marioponceg.conduit.http.HttpResponse
 import io.github.marioponceg.conduit.interceptor.InterceptorPipeline
+import io.github.marioponceg.quill.QuillEvent
 import io.github.marioponceg.quill.QuillLevel
 import io.github.marioponceg.quill.QuillLogger
 import io.github.marioponceg.quill.QuillValue
@@ -48,6 +49,26 @@ class QuillInterceptorTest {
         headers = Headers.of("Accept" to "application/json"),
         body = """{"name":"mario"}""".toByteArray(),
     )
+
+    private suspend fun eventsFor(
+        requestBody: ByteArray? = null,
+        responseBody: ByteArray? = null,
+        level: BodyLevel,
+        maxBodyBytes: Int = 65_536,
+    ): List<QuillEvent> {
+        val engine = ConduitEngine { HttpResponse(code = 200, body = responseBody) }
+        val interceptor = QuillInterceptor(
+            level = level,
+            maxBodyBytes = maxBodyBytes,
+            logger = logger,
+        )
+
+        pipeline(interceptor, engine).execute(
+            requestBody?.let { request.copy(body = it) } ?: request,
+        )
+
+        return sink.events
+    }
 
     @Test
     fun `emits http_request and http_response correlated by requestId`() = runTest {
@@ -232,5 +253,62 @@ class QuillInterceptorTest {
         }
 
         assertTrue(sink.events.isEmpty())
+    }
+
+    @Test
+    fun `binary bodies render a placeholder instead of mojibake`() = runTest {
+        val body = byteArrayOf(0x00, -0x01, -0x02, 0x42) // 0xFF is never valid UTF-8
+        val events = eventsFor(responseBody = body, level = BodyLevel.Body)
+        assertEquals(
+            "(binary body, 4 bytes)",
+            (events.last().fields.getValue("body") as QuillValue.Text).value,
+        )
+    }
+
+    @Test
+    fun `oversized text bodies truncate at the cap with an omission suffix`() = runTest {
+        val events = eventsFor(
+            responseBody = "a".repeat(100).toByteArray(),
+            level = BodyLevel.Body,
+            maxBodyBytes = 64,
+        )
+        assertEquals(
+            "a".repeat(64) + "… (+36 bytes)",
+            (events.last().fields.getValue("body") as QuillValue.Text).value,
+        )
+    }
+
+    @Test
+    fun `a body exactly at the cap passes untouched`() = runTest {
+        val events = eventsFor(
+            responseBody = "b".repeat(64).toByteArray(),
+            level = BodyLevel.Body,
+            maxBodyBytes = 64,
+        )
+        assertEquals("b".repeat(64), (events.last().fields.getValue("body") as QuillValue.Text).value)
+    }
+
+    @Test
+    fun `a cap that cuts a multibyte character keeps the clean prefix`() = runTest {
+        // "é" is 2 bytes; a 5-byte cap lands mid-character on the third é.
+        val events = eventsFor(
+            responseBody = "ééé".toByteArray(),
+            level = BodyLevel.Body,
+            maxBodyBytes = 5,
+        )
+        assertEquals("éé… (+2 bytes)", (events.last().fields.getValue("body") as QuillValue.Text).value)
+    }
+
+    @Test
+    fun `the cap applies to request bodies too`() = runTest {
+        val events = eventsFor(
+            requestBody = "c".repeat(100).toByteArray(),
+            level = BodyLevel.Body,
+            maxBodyBytes = 64,
+        )
+        assertEquals(
+            "c".repeat(64) + "… (+36 bytes)",
+            (events.first().fields.getValue("body") as QuillValue.Text).value,
+        )
     }
 }

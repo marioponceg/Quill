@@ -129,7 +129,9 @@ val client = conduit {
 
 `Authorization` headers are redacted by default, and verbosity follows OkHttp's logging
 interceptor levels: `Basic` for production (method, URL, code, duration), `Body` for
-debug builds. Conduit itself never depends on Quill.
+debug builds. Bodies render only when they decode as UTF-8 — binary payloads log a size
+placeholder — and at most 64 KiB is rendered, with the omitted remainder noted. Conduit
+itself never depends on Quill.
 
 ## Demo app
 
