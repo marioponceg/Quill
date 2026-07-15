@@ -8,11 +8,13 @@ build:
 formatting:
   active: true
   android: false
-  autoCorrect: true
+  autoCorrect: true # effective only when the Gradle extension sets autoCorrect (local runs), see detekt docs
 
 style:
   ForbiddenComment:
     active: false # TODO/FIXME comments are allowed; they are tracked in PRs
+  MagicNumber:
+    excludes: ['**/demo/**'] # showcase literals in the demo app are sample data, not constants
 
 naming:
   FunctionNaming:

@@ -1,8 +1,3 @@
-// MagicNumber: every literal in this file is illustrative sample payload data for the demo
-// screen's log scenarios (log values a user will see rendered), not a business-logic constant
-// that needs naming — extracting each one would only add indirection without clarity.
-@file:Suppress("MagicNumber")
-
 package io.github.marioponceg.quill.demo
 
 import androidx.compose.foundation.layout.Arrangement
