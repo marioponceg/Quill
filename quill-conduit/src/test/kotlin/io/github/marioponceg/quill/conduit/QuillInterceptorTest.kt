@@ -311,4 +311,21 @@ class QuillInterceptorTest {
             (events.first().fields.getValue("body") as QuillValue.Text).value,
         )
     }
+
+    @Test
+    fun `an oversized body malformed within the prefix renders the binary placeholder`() = runTest {
+        // 0xFF at index 10 is invalid UTF-8; the body also exceeds the 64-byte cap. REPORT
+        // fires on malformed input regardless of endOfInput = false, so this must be
+        // classified binary — not truncated text.
+        val body = "d".repeat(100).toByteArray().also { it[10] = -0x01 }
+        val events = eventsFor(
+            responseBody = body,
+            level = BodyLevel.Body,
+            maxBodyBytes = 64,
+        )
+        assertEquals(
+            "(binary body, 100 bytes)",
+            (events.last().fields.getValue("body") as QuillValue.Text).value,
+        )
+    }
 }
