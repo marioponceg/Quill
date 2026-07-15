@@ -15,8 +15,7 @@ internal object DataClassPrettyPrinter {
 
     fun prettyPrintOrNull(raw: String): String? {
         val trimmed = raw.trim()
-        if (!looksLikeDataClass(trimmed)) return null
-        if (nestingDepth(trimmed) > MAX_DEPTH) return null
+        if (!looksLikeDataClass(trimmed) || nestingDepth(trimmed) > MAX_DEPTH) return null
         return buildString { appendDataClass(trimmed, depth = 0) }
     }
 
@@ -38,8 +37,8 @@ internal object DataClassPrettyPrinter {
 
     private fun looksLikeDataClass(value: String): Boolean {
         val open = value.indexOf('(')
-        if (open <= 0 || !value.endsWith(")")) return false
-        if (!CLASS_NAME.matches(value.substring(0, open))) return false
+        val hasValidHeader = open > 0 && value.endsWith(")") && CLASS_NAME.matches(value.substring(0, open))
+        if (!hasValidHeader) return false
         return isBalanced(value.substring(open))
     }
 

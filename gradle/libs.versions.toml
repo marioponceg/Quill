@@ -2,6 +2,8 @@
 agp = "9.2.1"
 kotlin = "2.2.10"
 kover = "0.9.8"
+detekt = "1.23.8"
+binaryCompatibilityValidator = "0.18.0"
 conduit = "0.1.0"
 coroutines = "1.10.2"
 composeBom = "2026.06.01"
@@ -11,6 +13,8 @@ activityCompose = "1.13.0"
 kotlin-test-junit5 = { group = "org.jetbrains.kotlin", name = "kotlin-test-junit5", version.ref = "kotlin" }
 kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 kover-gradle-plugin = { group = "org.jetbrains.kotlinx", name = "kover-gradle-plugin", version.ref = "kover" }
+detekt-formatting = { group = "io.gitlab.arturbosch.detekt", name = "detekt-formatting", version.ref = "detekt" }
+detekt-gradle-plugin = { group = "io.gitlab.arturbosch.detekt", name = "detekt-gradle-plugin", version.ref = "detekt" }
 conduit-core = { group = "io.github.marioponceg", name = "conduit-core", version.ref = "conduit" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
@@ -23,5 +27,7 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binaryCompatibilityValidator" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 

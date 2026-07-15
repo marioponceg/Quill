@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kover)
+    alias(libs.plugins.detekt)
 }
 
 android {
@@ -27,9 +28,15 @@ android {
     }
 }
 
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+}
+
 dependencies {
     api(project(":quill-core"))
     testImplementation(libs.kotlin.test.junit5)
+    detektPlugins(libs.detekt.formatting)
 }
 
 kover {

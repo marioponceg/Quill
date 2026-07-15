@@ -56,7 +56,7 @@ internal class LogcatFormatter(
     }
 
     /** Text renders inside quotes: escape the quote, the escape char, and controls. */
-    private fun escapeText(value: String): String = buildString(value.length + 8) {
+    private fun escapeText(value: String): String = buildString(value.length + ESCAPE_SLACK) {
         for (ch in value) {
             when (ch) {
                 '"' -> append("\\\"")
@@ -97,5 +97,8 @@ internal class LogcatFormatter(
     private companion object {
         const val BOX_WIDTH = 60
         const val MIN_TRAILING_DASHES = 3
+
+        /** Extra capacity reserved for `buildString` so escaped quotes/backslashes rarely resize. */
+        const val ESCAPE_SLACK = 8
     }
 }

@@ -91,11 +91,11 @@ class JsonPrettyPrinterTest {
 
     @Test
     fun `returns null for malformed JSON`() {
-        assertNull(JsonPrettyPrinter.prettyPrintOrNull("""{"a":1"""))          // unterminated
-        assertNull(JsonPrettyPrinter.prettyPrintOrNull("""{"a" 1}"""))         // missing colon
-        assertNull(JsonPrettyPrinter.prettyPrintOrNull("""{"a":oops}"""))      // bad literal
+        assertNull(JsonPrettyPrinter.prettyPrintOrNull("""{"a":1""")) // unterminated
+        assertNull(JsonPrettyPrinter.prettyPrintOrNull("""{"a" 1}""")) // missing colon
+        assertNull(JsonPrettyPrinter.prettyPrintOrNull("""{"a":oops}""")) // bad literal
         assertNull(JsonPrettyPrinter.prettyPrintOrNull("""{"a":1} trailing"""))
-        assertNull(JsonPrettyPrinter.prettyPrintOrNull("""{a:1}"""))           // unquoted key
+        assertNull(JsonPrettyPrinter.prettyPrintOrNull("""{a:1}""")) // unquoted key
     }
 
     @Test

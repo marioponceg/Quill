@@ -84,6 +84,9 @@ class QuillLoggerTest {
     @Test
     fun `a throwing sink does not prevent later sinks from receiving the event`() {
         val throwing = object : QuillSink {
+            // Deliberately generic: this test proves the logger guards against *any* sink
+            // failure, not one specific exception type.
+            @Suppress("TooGenericExceptionThrown")
             override fun write(event: QuillEvent) = throw RuntimeException("sink bug")
         }
         val healthy = FakeSink()

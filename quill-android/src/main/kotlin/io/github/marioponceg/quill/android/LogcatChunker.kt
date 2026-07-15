@@ -12,6 +12,14 @@ internal object LogcatChunker {
 
     const val MAX_MESSAGE_BYTES: Int = 4000
 
+    // UTF-8 encoding length boundaries: code points below each threshold fit in the
+    // preceding number of bytes (RFC 3629).
+    private const val UTF8_ONE_BYTE_LIMIT = 0x80
+    private const val UTF8_TWO_BYTE_LIMIT = 0x800
+    private const val UTF8_THREE_BYTE_LIMIT = 0x10000
+    private const val UTF8_THREE_BYTES = 3
+    private const val UTF8_FOUR_BYTES = 4
+
     fun chunk(
         lines: List<String>,
         continuationPrefix: String,
@@ -94,9 +102,9 @@ internal object LogcatChunker {
     }
 
     private fun utf8Bytes(codePoint: Int): Int = when {
-        codePoint < 0x80 -> 1
-        codePoint < 0x800 -> 2
-        codePoint < 0x10000 -> 3
-        else -> 4
+        codePoint < UTF8_ONE_BYTE_LIMIT -> 1
+        codePoint < UTF8_TWO_BYTE_LIMIT -> 2
+        codePoint < UTF8_THREE_BYTE_LIMIT -> UTF8_THREE_BYTES
+        else -> UTF8_FOUR_BYTES
     }
 }

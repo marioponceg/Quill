@@ -7,4 +7,21 @@ plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kover) apply false
     alias(libs.plugins.compose.compiler) apply false
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.binary.compatibility.validator)
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+}
+
+apiValidation {
+    // The demo app is never published; quill-android is excluded for BCV/AGP
+    // compatibility — see AGENTS.md.
+    ignoredProjects += listOf("demo", "quill-android")
+}
+
+dependencies {
+    detektPlugins(libs.detekt.formatting)
 }

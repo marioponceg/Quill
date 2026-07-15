@@ -57,3 +57,13 @@ implementing.
 - No instrumented/emulator tests in v0.1.
 - Superpowers specs/plans live in `docs/superpowers/` locally but are gitignored — never
   committed nor PR'd. The relevant AGENTS.md sections are their durable record.
+- Detekt is a build gate: `maxIssues: 0`, config in `config/detekt/detekt.yml`
+  (deviations from defaults only), formatting rules included (fix issues manually or via
+  the IDE; autoCorrect is not wired into the Gradle runs). Rule `excludes`
+  override detekt's defaults — restore the default globs when adding to them. Run
+  `./gradlew detekt` before pushing.
+- `*.api` files (binary-compatibility-validator) are the frozen public API contract.
+  Changing them is a deliberate API decision: regenerate with `./gradlew apiDump` and
+  review the diff in the PR. The `demo` app is excluded. `quill-android` is also excluded
+  until BCV supports AGP built-in Kotlin — its surface is `LogcatSink` plus the validated
+  `quill-core` it re-exports.

@@ -1,0 +1,34 @@
+# Detekt configuration for Quill.
+# Builds upon the default ruleset (buildUponDefaultConfig = true in the applying build
+# scripts), so this file only contains deliberate deviations from the defaults.
+
+build:
+  maxIssues: 0 # fail the build on any unresolved issue
+
+formatting:
+  active: true
+  android: false
+  autoCorrect: true # effective only when the Gradle extension sets autoCorrect (local runs), see detekt docs
+
+style:
+  ForbiddenComment:
+    active: false # TODO/FIXME comments are allowed; they are tracked in PRs
+  MagicNumber:
+    # Overriding excludes replaces detekt's defaults, so the default test-source globs are
+    # restored here alongside the demo carve-out (showcase literals are sample data).
+    excludes:
+      [
+        '**/demo/**',
+        '**/test/**',
+        '**/androidTest/**',
+        '**/commonTest/**',
+        '**/jvmTest/**',
+        '**/androidUnitTest/**',
+        '**/androidInstrumentedTest/**',
+        '**/jsTest/**',
+        '**/iosTest/**',
+      ]
+
+naming:
+  FunctionNaming:
+    ignoreAnnotated: ['Test', 'Composable'] # backtick test names; PascalCase Composables

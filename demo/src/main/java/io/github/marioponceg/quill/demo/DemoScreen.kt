@@ -23,10 +23,10 @@ import io.github.marioponceg.conduit.http.HttpRequest
 import io.github.marioponceg.quill.Quill
 import io.github.marioponceg.quill.conduit.BodyLevel
 import io.github.marioponceg.quill.conduit.QuillInterceptor
-import java.io.IOException
-import java.net.SocketTimeoutException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import java.io.IOException
+import java.net.SocketTimeoutException
 
 private val log = Quill.logger("Demo")
 
@@ -93,11 +93,36 @@ data class DemoUser(
 )
 
 private fun levelScenarios(): List<Pair<String, () -> Unit>> = listOf(
-    "Verbose" to { log.verbose("cache_probe") { "key" to "user:42"; "hit" to false } },
-    "Debug" to { log.debug("query_planned") { "table" to "users"; "rows" to 128 } },
-    "Info" to { log.info("user_login") { "userId" to 42; "method" to "oauth" } },
-    "Warn" to { log.warn("quota_near_limit") { "used" to 91.5; "limit" to 100 } },
-    "Error" to { log.error("sync_failed") { "retries" to 3; "cause" to "backend" } },
+    "Verbose" to {
+        log.verbose("cache_probe") {
+            "key" to "user:42"
+            "hit" to false
+        }
+    },
+    "Debug" to {
+        log.debug("query_planned") {
+            "table" to "users"
+            "rows" to 128
+        }
+    },
+    "Info" to {
+        log.info("user_login") {
+            "userId" to 42
+            "method" to "oauth"
+        }
+    },
+    "Warn" to {
+        log.warn("quota_near_limit") {
+            "used" to 91.5
+            "limit" to 100
+        }
+    },
+    "Error" to {
+        log.error("sync_failed") {
+            "retries" to 3
+            "cause" to "backend"
+        }
+    },
 )
 
 private fun fieldScenarios(): List<Pair<String, () -> Unit>> = listOf(
