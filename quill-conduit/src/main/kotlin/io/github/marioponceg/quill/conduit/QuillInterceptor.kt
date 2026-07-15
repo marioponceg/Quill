@@ -44,7 +44,7 @@ import kotlin.time.TimeSource
 public class QuillInterceptor(
     private val level: BodyLevel = BodyLevel.Basic,
     private val redactHeaders: Set<String> = setOf("Authorization"),
-    private val maxBodyBytes: Long = DEFAULT_MAX_BODY_BYTES,
+    private val maxBodyBytes: Int = DEFAULT_MAX_BODY_BYTES,
     private val logger: QuillLogger = Quill.logger(ORIGIN),
     private val timeSource: TimeSource = TimeSource.Monotonic,
 ) : ConduitInterceptor {
@@ -110,7 +110,7 @@ public class QuillInterceptor(
             return decodeUtf8OrNull(body, endOfInput = true)
                 ?: "(binary body, ${body.size} bytes)"
         }
-        val prefix = body.copyOf(maxBodyBytes.toInt())
+        val prefix = body.copyOf(maxBodyBytes)
         // endOfInput = false: a multibyte character cut by the cap is left undecoded
         // instead of reported as malformed, so truncation never misclassifies text
         // as binary.
@@ -141,6 +141,6 @@ public class QuillInterceptor(
     private companion object {
         private const val ORIGIN = "Http"
         private const val REQUEST_ID_BYTES = 4
-        private const val DEFAULT_MAX_BODY_BYTES = 65_536L
+        private const val DEFAULT_MAX_BODY_BYTES = 65_536
     }
 }

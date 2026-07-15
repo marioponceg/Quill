@@ -54,7 +54,7 @@ class QuillInterceptorTest {
         requestBody: ByteArray? = null,
         responseBody: ByteArray? = null,
         level: BodyLevel,
-        maxBodyBytes: Long = 65_536L,
+        maxBodyBytes: Int = 65_536,
     ): List<QuillEvent> {
         val engine = ConduitEngine { HttpResponse(code = 200, body = responseBody) }
         val interceptor = QuillInterceptor(
