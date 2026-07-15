@@ -1,0 +1,19 @@
+# Detekt configuration for Quill.
+# Builds upon the default ruleset (buildUponDefaultConfig = true in the applying build
+# scripts), so this file only contains deliberate deviations from the defaults.
+
+build:
+  maxIssues: 0 # fail the build on any unresolved issue
+
+formatting:
+  active: true
+  android: false
+  autoCorrect: true
+
+style:
+  ForbiddenComment:
+    active: false # TODO/FIXME comments are allowed; they are tracked in PRs
+
+naming:
+  FunctionNaming:
+    ignoreAnnotated: ['Test', 'Composable'] # backtick test names; PascalCase Composables

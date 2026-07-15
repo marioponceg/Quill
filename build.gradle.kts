@@ -7,4 +7,14 @@ plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kover) apply false
     alias(libs.plugins.compose.compiler) apply false
+    alias(libs.plugins.detekt)
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+}
+
+dependencies {
+    detektPlugins(libs.detekt.formatting)
 }

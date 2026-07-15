@@ -1,7 +1,6 @@
 package io.github.marioponceg.quill.conduit
 
 import io.github.marioponceg.conduit.http.Headers
-import io.github.marioponceg.conduit.http.HttpRequest
 import io.github.marioponceg.conduit.http.HttpResponse
 import io.github.marioponceg.conduit.interceptor.ConduitInterceptor
 import io.github.marioponceg.quill.Quill
@@ -106,18 +105,20 @@ public class QuillInterceptor(
     }
 
     private fun renderBody(body: ByteArray): String {
-        if (body.size <= maxBodyBytes) {
-            return decodeUtf8OrNull(body, endOfInput = true)
-                ?: "(binary body, ${body.size} bytes)"
+        val truncated = body.size > maxBodyBytes
+        // endOfInput = false when truncated: a multibyte character cut by the cap is left
+        // undecoded instead of reported as malformed, so truncation never misclassifies
+        // text as binary.
+        val prefix = if (truncated) body.copyOf(maxBodyBytes) else body
+        val decoded = decodeUtf8OrNull(prefix, endOfInput = !truncated)
+        return when {
+            decoded == null -> "(binary body, ${body.size} bytes)"
+            !truncated -> decoded
+            else -> {
+                val omitted = body.size - decoded.toByteArray(Charsets.UTF_8).size
+                "$decoded… (+$omitted bytes)"
+            }
         }
-        val prefix = body.copyOf(maxBodyBytes)
-        // endOfInput = false: a multibyte character cut by the cap is left undecoded
-        // instead of reported as malformed, so truncation never misclassifies text
-        // as binary.
-        val decoded = decodeUtf8OrNull(prefix, endOfInput = false)
-            ?: return "(binary body, ${body.size} bytes)"
-        val omitted = body.size - decoded.toByteArray(Charsets.UTF_8).size
-        return "$decoded… (+$omitted bytes)"
     }
 
     /** Strict UTF-8 decode: returns null on any malformed or unmappable sequence. */
@@ -127,8 +128,8 @@ public class QuillInterceptor(
             .onUnmappableCharacter(CodingErrorAction.REPORT)
         val out = CharBuffer.allocate(bytes.size)
         val result = decoder.decode(ByteBuffer.wrap(bytes), out, endOfInput)
-        if (result.isError) return null
-        if (endOfInput && decoder.flush(out).isError) return null
+        val hasError = result.isError || (endOfInput && decoder.flush(out).isError)
+        if (hasError) return null
         out.flip()
         return out.toString()
     }

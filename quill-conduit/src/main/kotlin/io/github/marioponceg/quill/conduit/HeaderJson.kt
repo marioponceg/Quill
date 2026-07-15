@@ -15,8 +15,11 @@ internal fun Headers.toRedactedJson(redact: Set<String>): String {
         val values =
             if (name.lowercase() in redactLower) listOf(REDACTED) else values(name)
         val rendered =
-            if (values.size == 1) values.single().toJsonString()
-            else values.joinToString(",", "[", "]") { it.toJsonString() }
+            if (values.size == 1) {
+                values.single().toJsonString()
+            } else {
+                values.joinToString(",", "[", "]") { it.toJsonString() }
+            }
         "${name.toJsonString()}:$rendered"
     }
 }
