@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/marioponceg/Quill/actions/workflows/ci.yml/badge.svg)](https://github.com/marioponceg/Quill/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/marioponceg/Quill/branch/main/graph/badge.svg)](https://codecov.io/gh/marioponceg/Quill)
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.marioponceg/quill-core)](https://central.sonatype.com/search?q=g%3Aio.github.marioponceg+quill)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.marioponceg/quill-core)](https://central.sonatype.com/artifact/io.github.marioponceg/quill-core)
 
 Structured logging for Android and the JVM — every log is an event with typed fields,
 rendered as pretty boxed logcat output by sinks that never crash your app.
